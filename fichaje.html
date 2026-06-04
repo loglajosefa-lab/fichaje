@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Fichaje</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Unbounded:wght@400;700;900&display=swap');
+
+  :root {
+    --bg: #f0ede8;
+    --surface: #ffffff;
+    --ink: #0d0d0d;
+    --muted: #888880;
+    --entry: #1a472a;
+    --entry-light: #e8f5ec;
+    --exit: #7a1f1f;
+    --exit-light: #faeaea;
+    --accent: #c8ff5a;
+    --border: #d8d4cc;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Space Mono', monospace;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Fondo decorativo */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      repeating-linear-gradient(0deg, transparent, transparent 39px, var(--border) 39px, var(--border) 40px),
+      repeating-linear-gradient(90deg, transparent, transparent 39px, var(--border) 39px, var(--border) 40px);
+    opacity: 0.35;
+    pointer-events: none;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 2px solid var(--ink);
+    border-radius: 0;
+    padding: 32px 28px;
+    width: 100%;
+    max-width: 380px;
+    position: relative;
+    box-shadow: 6px 6px 0 var(--ink);
+    animation: slideUp 0.4s cubic-bezier(0.16,1,0.3,1) both;
+  }
+
+  @keyframes slideUp {
+    from { opacity:0; transform: translateY(24px); }
+    to   { opacity:1; transform: translateY(0); }
+  }
+
+  .logo {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 0.65rem;
+    font-weight: 900;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 28px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .logo::before {
+    content: '';
+    width: 20px; height: 2px;
+    background: var(--ink);
+  }
+
+  .clock {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 2.8rem;
+    font-weight: 900;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .date-label {
+    font-size: 0.72rem;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 28px;
+  }
+
+  .divider {
+    height: 2px;
+    background: var(--ink);
+    margin: 0 0 24px;
+  }
+
+  label {
+    display: block;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  select, input[type="password"] {
+    width: 100%;
+    background: var(--bg);
+    border: 2px solid var(--ink);
+    border-radius: 0;
+    padding: 12px 14px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.92rem;
+    color: var(--ink);
+    outline: none;
+    appearance: none;
+    -webkit-appearance: none;
+    margin-bottom: 16px;
+    transition: background 0.15s;
+  }
+
+  select:focus, input[type="password"]:focus {
+    background: #fff;
+  }
+
+  .select-wrap { position: relative; }
+  .select-wrap::after {
+    content: '▾';
+    position: absolute;
+    right: 14px; top: 50%;
+    transform: translateY(-60%);
+    pointer-events: none;
+    font-size: 0.9rem;
+  }
+
+  .pin-dots {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .pin-dot {
+    width: 12px; height: 12px;
+    border: 2px solid var(--ink);
+    border-radius: 50%;
+    transition: background 0.15s;
+  }
+  .pin-dot.filled { background: var(--ink); }
+
+  .btn-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 8px;
+  }
+
+  .btn {
+    padding: 16px 12px;
+    border: 2px solid var(--ink);
+    font-family: 'Unbounded', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.12s;
+    border-radius: 0;
+  }
+
+  .btn-entry {
+    background: var(--entry-light);
+    color: var(--entry);
+    border-color: var(--entry);
+  }
+  .btn-entry:hover { background: var(--entry); color: #fff; }
+  .btn-entry:active { transform: translate(2px,2px); box-shadow: none !important; }
+
+  .btn-exit {
+    background: var(--exit-light);
+    color: var(--exit);
+    border-color: var(--exit);
+  }
+  .btn-exit:hover { background: var(--exit); color: #fff; }
+  .btn-exit:active { transform: translate(2px,2px); }
+
+  /* Feedback */
+  .feedback {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 16px 0;
+    animation: pop 0.35s cubic-bezier(0.16,1,0.3,1) both;
+  }
+
+  @keyframes pop {
+    from { opacity:0; transform: scale(0.85); }
+    to   { opacity:1; transform: scale(1); }
+  }
+
+  .feedback-icon {
+    font-size: 3.5rem;
+    line-height: 1;
+    margin-bottom: 12px;
+  }
+
+  .feedback-title {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 900;
+    margin-bottom: 6px;
+  }
+
+  .feedback-sub {
+    font-size: 0.75rem;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  .feedback.ok .feedback-title { color: var(--entry); }
+  .feedback.out .feedback-title { color: var(--exit); }
+  .feedback.err .feedback-title { color: #c0392b; }
+
+  .error-msg {
+    font-size: 0.72rem;
+    color: #c0392b;
+    margin-top: -10px;
+    margin-bottom: 12px;
+    display: none;
+  }
+
+  /* Estado de envío */
+  .sending {
+    text-align: center;
+    padding: 20px 0;
+    font-size: 0.8rem;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    animation: pulse 1s ease-in-out infinite alternate;
+  }
+  @keyframes pulse { from { opacity:0.4; } to { opacity:1; } }
+
+</style>
+</head>
+<body>
+
+<div class="card" id="card">
+
+  <!-- ── Formulario ── -->
+  <div id="form-view">
+    <div class="logo">Fichaje</div>
+
+    <div class="clock" id="clock">--:--</div>
+    <div class="date-label" id="date-label">cargando…</div>
+    <div class="divider"></div>
+
+    <label>Empleado</label>
+    <div class="select-wrap">
+      <select id="sel-emp">
+        <option value="">— Seleccioná —</option>
+      </select>
+    </div>
+
+    <label>PIN</label>
+    <div class="pin-dots" id="pin-dots">
+      <div class="pin-dot"></div>
+      <div class="pin-dot"></div>
+      <div class="pin-dot"></div>
+      <div class="pin-dot"></div>
+    </div>
+    <input type="password" id="inp-pin" maxlength="4" inputmode="numeric" pattern="[0-9]*" placeholder="• • • •">
+    <div class="error-msg" id="error-msg">PIN incorrecto. Intentá de nuevo.</div>
+
+    <div class="btn-row">
+      <button class="btn btn-entry" onclick="fichar('entrada')">▲ Entrada</button>
+      <button class="btn btn-exit"  onclick="fichar('salida')">▼ Salida</button>
+    </div>
+  </div>
+
+  <!-- ── Enviando ── -->
+  <div id="sending-view" style="display:none;">
+    <div class="logo">Fichaje</div>
+    <div class="sending">Registrando…</div>
+  </div>
+
+  <!-- ── Feedback ── -->
+  <div class="feedback" id="feedback-view">
+    <div class="feedback-icon" id="fb-icon"></div>
+    <div class="feedback-title" id="fb-title"></div>
+    <div class="feedback-sub"  id="fb-sub"></div>
+  </div>
+
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+//  ⚙️  CONFIGURACIÓN — completar después
+// ══════════════════════════════════════════════
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzE3tLCMsIyeFfZBoC_9JnJym-ALm3SkuJguim8t_yRwqsV4bSywWSh8HVgbfOe4UWS/exec';
+
+// Empleados y PINs — el encargado los carga acá (o desde el panel de admin)
+// Formato: { nombre: 'Nombre Apellido', pin: '1234' }
+let EMPLEADOS = JSON.parse(localStorage.getItem('fichaje_empleados') || '[{"nombre":"Luis Gomez","pin":"1858"},{"nombre":"Braian Guiñazu","pin":"2616"},{"nombre":"Oscar Andicoechea","pin":"0600"},{"nombre":"Ivan Cocheret","pin":"9811"},{"nombre":"Diego Roldán","pin":"9807"},{"nombre":"Federico Leidi","pin":"1928"},{"nombre":"Alexander Sanchez","pin":"1989"}]');
+
+// ══════════════════════════════════════════════
+//  RELOJ
+// ══════════════════════════════════════════════
+function updateClock() {
+  const now = new Date();
+  document.getElementById('clock').textContent =
+    now.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+  document.getElementById('date-label').textContent =
+    now.toLocaleDateString('es-AR', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+}
+updateClock();
+setInterval(updateClock, 1000);
+
+// ══════════════════════════════════════════════
+//  PIN VISUAL
+// ══════════════════════════════════════════════
+document.getElementById('inp-pin').addEventListener('input', function() {
+  const dots = document.querySelectorAll('.pin-dot');
+  dots.forEach((d, i) => d.classList.toggle('filled', i < this.value.length));
+  document.getElementById('error-msg').style.display = 'none';
+});
+
+// ══════════════════════════════════════════════
+//  CARGAR EMPLEADOS EN SELECT
+// ══════════════════════════════════════════════
+function renderSelect() {
+  const sel = document.getElementById('sel-emp');
+  sel.innerHTML = '<option value="">— Seleccioná —</option>';
+  EMPLEADOS.forEach((e, i) => {
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = e.nombre;
+    sel.appendChild(opt);
+  });
+}
+renderSelect();
+
+// ══════════════════════════════════════════════
+//  FICHAR
+// ══════════════════════════════════════════════
+function fichar(tipo) {
+  const idx = document.getElementById('sel-emp').value;
+  const pin = document.getElementById('inp-pin').value.trim();
+  const errMsg = document.getElementById('error-msg');
+
+  if (idx === '') return shake('sel-emp');
+  if (!pin)       return shake('inp-pin');
+
+  const emp = EMPLEADOS[parseInt(idx)];
+  if (String(emp.pin) !== String(pin)) {
+    errMsg.style.display = 'block';
+    document.getElementById('inp-pin').value = '';
+    document.querySelectorAll('.pin-dot').forEach(d => d.classList.remove('filled'));
+    shake('inp-pin');
+    return;
+  }
+
+  // PIN correcto → enviar
+  const now = new Date();
+  const payload = {
+    nombre:  emp.nombre,
+    tipo:    tipo,
+    fecha:   now.toLocaleDateString('es-AR'),
+    hora:    now.toLocaleTimeString('es-AR', { hour:'2-digit', minute:'2-digit', second:'2-digit' }),
+    timestamp: now.toISOString()
+  };
+
+  showSending();
+
+  if (GOOGLE_SCRIPT_URL === 'PENDIENTE') {
+    // Modo demo: guardar en localStorage hasta que esté el script
+    const logs = JSON.parse(localStorage.getItem('fichaje_logs') || '[]');
+    logs.push(payload);
+    localStorage.setItem('fichaje_logs', JSON.stringify(logs));
+    setTimeout(() => showFeedback(tipo, emp.nombre, payload.hora), 800);
+  } else {
+    const params = new URLSearchParams({
+      nombre:    payload.nombre,
+      tipo:      payload.tipo,
+      fecha:     payload.fecha,
+      hora:      payload.hora,
+      timestamp: payload.timestamp
+    });
+    fetch(GOOGLE_SCRIPT_URL + '?' + params.toString(), {
+      method: 'GET',
+      mode: 'no-cors'
+    })
+    .then(() => showFeedback(tipo, emp.nombre, payload.hora))
+    .catch(() => showFeedback('error', emp.nombre, payload.hora));
+  }
+}
+
+// ══════════════════════════════════════════════
+//  UI HELPERS
+// ══════════════════════════════════════════════
+function showSending() {
+  document.getElementById('form-view').style.display    = 'none';
+  document.getElementById('sending-view').style.display = 'block';
+  document.getElementById('feedback-view').style.display = 'none';
+}
+
+function showFeedback(tipo, nombre, hora) {
+  document.getElementById('sending-view').style.display = 'none';
+  const fb = document.getElementById('feedback-view');
+  fb.style.display = 'flex';
+
+  if (tipo === 'entrada') {
+    fb.className = 'feedback ok';
+    document.getElementById('fb-icon').textContent  = '✅';
+    document.getElementById('fb-title').textContent = '¡Buen día!';
+    document.getElementById('fb-sub').textContent   = `${nombre}\nEntrada registrada a las ${hora}`;
+  } else if (tipo === 'salida') {
+    fb.className = 'feedback out';
+    document.getElementById('fb-icon').textContent  = '👋';
+    document.getElementById('fb-title').textContent = '¡Hasta mañana!';
+    document.getElementById('fb-sub').textContent   = `${nombre}\nSalida registrada a las ${hora}`;
+  } else {
+    fb.className = 'feedback err';
+    document.getElementById('fb-icon').textContent  = '⚠️';
+    document.getElementById('fb-title').textContent = 'Error de conexión';
+    document.getElementById('fb-sub').textContent   = 'No se pudo registrar.\nAvisale al encargado.';
+  }
+
+  // Volver al formulario después de 3 segundos
+  setTimeout(resetForm, 3000);
+}
+
+function resetForm() {
+  document.getElementById('feedback-view').style.display = 'none';
+  document.getElementById('form-view').style.display     = 'block';
+  document.getElementById('sel-emp').value  = '';
+  document.getElementById('inp-pin').value  = '';
+  document.querySelectorAll('.pin-dot').forEach(d => d.classList.remove('filled'));
+  document.getElementById('error-msg').style.display = 'none';
+}
+
+function shake(id) {
+  const el = document.getElementById(id);
+  el.style.animation = 'none';
+  el.offsetHeight;
+  el.style.animation = 'shake 0.35s ease';
+}
+
+const shakeStyle = document.createElement('style');
+shakeStyle.textContent = `@keyframes shake {
+  0%,100%{transform:translateX(0)} 20%{transform:translateX(-6px)} 60%{transform:translateX(6px)} 80%{transform:translateX(-3px)}
+}`;
+document.head.appendChild(shakeStyle);
+</script>
+</body>
+</html>
